@@ -1,22 +1,6 @@
-self.clients
-  .matchAll({ type: 'window', includeUncontrolled: true })
-  .then((clients) => {
-    clients.forEach((client) => {
-      client.postMessage({
-        type: 'BACKGROUND_NOTIFICATION',
-        payload: payload.notification,
-      });
-    });
-  });
-
-//   self.registration.showNotification(notificationTitle, notificationOptions);
-// });
-
 // File: firebase-messaging-sw.js
-importScripts('https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js');
-importScripts(
-  'https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js'
-);
+importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js');
+importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging.js');
 
 // Set Firebase configuration, once available
 self.addEventListener('fetch', () => {

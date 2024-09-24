@@ -1,20 +1,8 @@
-// page.tsx
 'use client';
-import { onMessageListener } from '@/firebase';
 import useFirebaseMessaging from '@/hooks/useFirebaseMessaging';
-import { useEffect } from 'react';
 
 const Page = () => {
   const { fcmToken, notification } = useFirebaseMessaging();
-  // console.log('notification', notification);
-
-  useEffect(() => {
-    // Set up the onMessageListener to handle foreground messages
-    const unsubscribe = onMessageListener();
-    return () => {
-      unsubscribe();
-    };
-  }, []);
 
   return (
     <div>

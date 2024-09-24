@@ -1,7 +1,13 @@
+'use client';
 // Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app';
 // import { getAnalytics } from 'firebase/analytics';
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import {
+  getMessaging,
+  getToken,
+  isSupported,
+  onMessage,
+} from 'firebase/messaging';
 import { MessagePayload } from 'firebase/messaging/sw';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -19,18 +25,30 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+export const app = initializeApp(firebaseConfig);
 // const analytics = getAnalytics(app);
 
-const messaging = getMessaging(app);
+const messaging = (async () => {
+  try {
+    const isSupportedBrowser = await isSupported();
+    if (isSupportedBrowser) {
+      return getMessaging(app);
+    } else console.log('Firebase not supported this browser');
+    return null;
+  } catch (err) {
+    console.log(err);
+    return null;
+  }
+})();
 
 // Request permission and get FCM token
 export const requestFCMToken = async () => {
   let token = '';
   try {
+    const msg = await messaging;
     const permission = await Notification?.requestPermission();
     if (permission === 'granted') {
-      token = await getToken(messaging, {
+      token = await getToken(msg!, {
         vapidKey: process.env.FCM_PUBLIC_KEY,
       });
       console.log('FCM token received:', token);
@@ -44,17 +62,17 @@ export const requestFCMToken = async () => {
 };
 
 // Listener for receiving messages when the app is in the foreground
-export const onMessageListener = () => {
-  // const messaging = getMessaging();
-  // onMessage(messaging, (payload) => {
-  //   console.log('Received foreground message:', payload);
-  //   if (payload?.notification) {
-  //     callback(payload);
-  //   }
-  // });
-  return onMessage(messaging, (payload) => {
-    console.log('Foreground push notification received:', payload);
-    // Handle the received push notification while the app is in the foreground
-    // You can display a notification or update the UI based on the payload
+export const onMessageListener = () =>
+  new Promise((resolve) => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      (async () => {
+        const messagingResolve = await messaging;
+        onMessage(messagingResolve!, (payload) => {
+          console.log('On message: ', messaging, payload);
+          resolve(payload);
+        });
+      })();
+    }
   });
-};
+
+export const FCM = messaging;

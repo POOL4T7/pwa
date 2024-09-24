@@ -1,8 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { onMessageListener, requestFCMToken } from '@/firebase';
-import { getMessaging, onMessage } from 'firebase/messaging';
-import { toast } from 'react-toastify';
 
 interface NotificationPayload {
   title: string;
@@ -25,7 +23,7 @@ const useFirebaseMessaging = () => {
 
   useEffect(() => {
     const registerServiceWorker = async () => {
-      if (navigator && 'serviceWorker' in navigator) {
+      if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
         try {
           const registration = await navigator?.serviceWorker.getRegistration(
             '/firebase-messaging-sw.js'
@@ -39,62 +37,21 @@ const useFirebaseMessaging = () => {
       }
     };
 
-    const listenForForegroundMessages = async () => {
-      // const messaging = getMessaging();
-      // onMessage(messaging, (payload) => {
-      //   console.log('Foreground message received:', payload);
-      //   setNotification({
-      //     title: payload.notification?.title || 'No Title',
-      //     body: payload.notification?.body || 'No Body',
-      //   });
-      // });
-      if (typeof window !== 'undefined') {
-        console.log('listenForForegroundMessages');
-
-        const data = onMessageListener();
-        console.log('listenForForegroundMessages', data);
-        return data;
-      }
-    };
-
-    const listenForBackgroundMessages = () => {
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'BACKGROUND_NOTIFICATION') {
-          const { title, body } = event.data.payload;
-          console.log('event.data.payload', event.data.payload);
-          toast.success(title, {
-            position: 'top-right',
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: 'colored',
-          });
-          // toast('🦄 Wow so easy!', {
-          //   position: 'top-right',
-          //   autoClose: 5000,
-          //   hideProgressBar: false,
-          //   closeOnClick: true,
-          //   pauseOnHover: true,
-          //   draggable: true,
-          //   progress: undefined,
-          //   theme: 'colored',
-          // });
-          setNotification({ title, body });
-        }
-      });
-    };
-
     if (isBrowserSupported()) {
       registerServiceWorker();
-      listenForForegroundMessages();
-      listenForBackgroundMessages();
     } else {
-      console.log('hsgvdchjs');
+      console.log('Your browser not supporting the FCM');
     }
   }, []);
+
+  onMessageListener()
+    .then((payload: any) => {
+      setNotification({
+        title: payload.notification.title,
+        body: payload.notification.body,
+      });
+    })
+    .catch((err) => console.log('failed: ', err));
 
   return { fcmToken, notification };
 };
