@@ -1,0 +1,99 @@
+self.clients
+  .matchAll({ type: 'window', includeUncontrolled: true })
+  .then((clients) => {
+    clients.forEach((client) => {
+      client.postMessage({
+        type: 'BACKGROUND_NOTIFICATION',
+        payload: payload.notification,
+      });
+    });
+  });
+
+//   self.registration.showNotification(notificationTitle, notificationOptions);
+// });
+
+// File: firebase-messaging-sw.js
+importScripts('https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js');
+importScripts(
+  'https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js'
+);
+
+// Set Firebase configuration, once available
+self.addEventListener('fetch', () => {
+  try {
+    const urlParams = new URLSearchParams(location.search);
+    console.log('urlParams', urlParams);
+    self.firebaseConfig = Object.fromEntries(urlParams);
+  } catch (err) {
+    console.error('Failed to add event listener', err);
+  }
+});
+
+// "Default" Firebase configuration (prevents errors)
+const defaultConfig = {
+  apiKey: true,
+  projectId: true,
+  messagingSenderId: true,
+  appId: true,
+};
+
+// Initialize Firebase app
+firebase.initializeApp(self.firebaseConfig || defaultConfig);
+let messaging;
+try {
+  messaging = firebase.messaging.isSupported() ? firebase.messaging() : null;
+} catch (err) {
+  console.error('Failed to initialize Firebase Messaging', err);
+}
+
+// To dispaly background notifications
+if (messaging) {
+  try {
+    messaging.onBackgroundMessage((payload) => {
+      console.log('Received background message: ', payload);
+      const notificationTitle = payload.notification.title;
+      const notificationOptions = {
+        body: payload.notification.body,
+        tag: notificationTitle,
+        icon: payload.notification?.image || '',
+        data: {
+          url: payload?.data?.openUrl,
+        },
+      };
+      if (payload?.collapseKey && notification?.image) {
+        self.registration.showNotification(
+          notificationTitle,
+          notificationOptions
+        );
+      } else {
+        // Skipping the event handling for notification
+        return new Promise(function (resolve, reject) {});
+      }
+    });
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close(); // CLosing the notification when clicked
+  const urlToOpen = event?.notification?.data?.url || 'https://localhost:3000/';
+  // Open the URL in the default browser.
+  event.waitUntil(
+    clients
+      .matchAll({
+        type: 'window',
+      })
+      .then((windowClients) => {
+        for (const client of windowClients) {
+          if (client.url === urlToOpen && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        // If not, open a new window/tab with the target URL
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen);
+        }
+      })
+  );
+});
