@@ -18,9 +18,8 @@ app.use(
   })
 );
 
-// const UserRoutes = require('./routes/user.route');
-// const PostRoutes = require('./routes/post.route');
 const pushNotifiction = require('./routes/notification');
+const userRoutes = require('./routes/user.route');
 
 app.get('/api', (req, res) => {
   var response = {
@@ -33,6 +32,7 @@ app.get('/api', (req, res) => {
 // app.use('/api/user', UserRoutes);
 // app.use('/api/post', PostRoutes);
 app.use('/api', pushNotifiction);
+app.use('/api/user', userRoutes);
 
 /**
  * @description Page NOT FOUND Error
@@ -45,12 +45,13 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  if (err) {
-    return res
-      .status(500)
-      .json({ success: false, error: err, message: 'server error' });
-  }
-  return res.status(200).json({ success: true, message: 'status ok' });
+  console.error(err.stack);
+
+  return res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Internal Server Error',
+    error: process.env.NODE_ENV === 'development' ? err : {},
+  });
 });
 
 const PORT = process.env.PORT || 8080;

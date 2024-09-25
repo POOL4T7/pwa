@@ -22,11 +22,15 @@ const UserSchema = new Schema({
   },
   profileImage: {
     type: String,
-    default: '', // URL to the profile image
+    default: '',
+  },
+  bio: {
+    type: String,
+    default: '',
   },
   role: {
     type: String,
-    enum: ['admin', 'user', 'guest'], // Different user roles
+    enum: ['admin', 'user', 'guest'],
     default: 'user',
   },
   pushSubscription: {
@@ -45,35 +49,7 @@ const UserSchema = new Schema({
       },
     },
   },
-  notificationsEnabled: {
-    type: Boolean,
-    default: true, // User can enable or disable push notifications
-  },
-  devices: [
-    {
-      deviceId: { type: String, required: true }, // Unique device identifier
-      deviceType: {
-        type: String,
-        enum: ['iOS', 'Android', 'Web'],
-        required: true,
-      },
-      lastLogin: { type: Date, default: Date.now }, // Track the last login date for each device
-    },
-  ],
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
-
-// Pre-save hook to update 'updatedAt' on every document update
-UserSchema.pre('save', function (next) {
-  this.updatedAt = Date.now();
-  next();
+  fcmToken: { type: String, default: '' },
 });
 
 // Create the User model
