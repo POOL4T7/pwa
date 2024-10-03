@@ -2,10 +2,10 @@
 'use client';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-
 interface SessionContextType {
   session: any;
   loading: boolean;
+  token: string;
   refetchSession: () => void;
 }
 
@@ -16,6 +16,7 @@ const SessionContextT = createContext<SessionContextType | undefined>(
 export const SessionContext = ({ children }: { children: React.ReactNode }) => {
   const { data: session, status } = useSession();
   const [cachedSession, setCachedSession] = useState(session);
+  const [token, setToken] = useState<string>('');
   const loading = status === 'loading';
 
   useEffect(() => {
@@ -30,7 +31,7 @@ export const SessionContext = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <SessionContextT.Provider
-      value={{ session: cachedSession, loading, refetchSession }}
+      value={{ session: cachedSession, loading, refetchSession, token }}
     >
       {children}
     </SessionContextT.Provider>
@@ -38,7 +39,7 @@ export const SessionContext = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const useSessionContext = () => {
-  const context = useContext(SessionContextT);
+  const context = useContext<SessionContextType | undefined>(SessionContextT);
   if (!context) {
     throw new Error('useSessionContext must be used within a SessionProvider');
   }

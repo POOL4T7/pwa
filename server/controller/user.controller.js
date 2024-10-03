@@ -14,7 +14,6 @@ exports.userRegistration = async (req, res, next) => {
         password: hashedPassword,
         firstName: req.body.firstName,
         lastName: req.body.lastName,
-        mobile: req.body.mobile,
         status: 'active',
       };
       await UserServices.addUser(formData);
@@ -64,6 +63,7 @@ exports.updateProfile = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
+    console.log('req.body', req.body);
     const user = await UserServices.getUserData({
       email: req.body.email,
     });
@@ -92,6 +92,36 @@ exports.login = async (req, res, next) => {
         message: 'Password not matched',
       });
     }
+  } catch (e) {
+    e.status = 500;
+    return next(e);
+  }
+};
+
+exports.googleLogin = async (req, res, next) => {
+  try {
+    let user = await UserServices.getUserData({
+      email: req.body.email,
+    });
+    if (user) {
+    } else {
+      const hashedPassword = await AuthService.generateHashPassword(
+        req.body.email
+      );
+      const formData = {
+        email: req.body.email,
+        password: hashedPassword,
+        name: req.body.name,
+        status: 'active',
+      };
+      user = await UserServices.addUser(formData);
+    }
+    delete user.password;
+    return res.status(200).json({
+      success: true,
+      message: 'User logged in successfully',
+      data: user,
+    });
   } catch (e) {
     e.status = 500;
     return next(e);

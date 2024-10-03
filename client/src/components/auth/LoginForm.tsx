@@ -16,10 +16,10 @@ const SignupSchema = Yup.object().shape({
   email: Yup.string().email('Invalid email').required('* Email is Required'),
   password: Yup.string().required('* Password is Required'),
 });
+
 export default function LoginForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { session } = useSessionContext();
@@ -30,13 +30,12 @@ export default function LoginForm() {
     }
   }, [session?.user, router]);
 
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
-    const data = new FormData(e.currentTarget);
-
+  const handleSubmit = async (values: any) => {
+    setIsSubmitting(true);
     const signInResponse = await signIn('credentials', {
-      email: data.get('email'),
-      password: data.get('password'),
+      email: values.email,
+      password: values.password,
+      fcmToken: localStorage.getItem('fcmToken'),
       redirect: false,
     });
 

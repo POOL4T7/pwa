@@ -8,7 +8,6 @@ import {
   isSupported,
   onMessage,
 } from 'firebase/messaging';
-import { MessagePayload } from 'firebase/messaging/sw';
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -49,7 +48,7 @@ export const requestFCMToken = async () => {
     const permission = await Notification?.requestPermission();
     if (permission === 'granted') {
       token = await getToken(msg!, {
-        vapidKey: process.env.FCM_PUBLIC_KEY,
+        vapidKey: process.env.NEXT_PUBLIC_FCM_PUBLIC_KEY,
       });
       console.log('FCM token received:', token);
     } else {

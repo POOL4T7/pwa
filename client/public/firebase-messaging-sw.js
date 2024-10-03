@@ -1,6 +1,6 @@
 // File: firebase-messaging-sw.js
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js');
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging.js');
+importScripts('https://www.gstatic.com/firebasejs/8.2.0/firebase-app.js');
+importScripts('https://www.gstatic.com/firebasejs/8.2.0/firebase-messaging.js');
 
 // Set Firebase configuration, once available
 self.addEventListener('fetch', () => {

@@ -6,6 +6,7 @@ import { SessionContext } from '@/context/sessionProvider';
 import PushNotification from '@/context/PushNotification';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import NavBar from '@/components/layout/Navbar';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -50,9 +51,10 @@ export default function RootLayout({
         />
         <Provider>
           {/* <PushNotification /> */}
-          <SessionContext>
-            <main>{children}</main>
-          </SessionContext>
+          <>
+            <NavBar />
+            <main style={{ marginTop: '64px' }}>{children}</main>
+          </>
         </Provider>
       </body>
     </html>

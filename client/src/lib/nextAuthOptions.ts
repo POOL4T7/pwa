@@ -1,6 +1,19 @@
-import { NextAuthOptions } from 'next-auth';
+import { DefaultSession, NextAuthOptions, User } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
+
+declare module 'next-auth' {
+  interface User {
+    _id: string;
+    role: string;
+    email: string;
+    name: string;
+  }
+
+  interface Session {
+    user: User & DefaultSession['user'];
+  }
+}
 
 export const authConfig: NextAuthOptions = {
   providers: [
@@ -13,29 +26,37 @@ export const authConfig: NextAuthOptions = {
           placeholder: 'example@example.com',
         },
         password: { label: 'Password', type: 'password' },
+        fcmToken: { label: 'fcmToken', type: 'text' },
       },
       async authorize(credentials) {
         if (!credentials || !credentials.email || !credentials.password)
           return null;
 
-        return null;
-      },
-    }),
-    CredentialsProvider({
-      name: 'Sign Up',
-      credentials: {
-        email: {
-          label: 'Email',
-          type: 'email',
-          placeholder: 'example@example.com',
-        },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        if (!credentials || !credentials.email || !credentials.password)
-          return null;
-
-        return null;
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_SERVER_URL}/user/login`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+              fcmToken: credentials.fcmToken,
+            }),
+          }
+        );
+        const data = await res.json();
+        if (res.ok && data.user) {
+          return {
+            _id: data.user._id, // Ensure _id is returned here
+            email: data.user.email,
+            role: data.user.role || 'user',
+            name: data.user.name,
+          } as User;
+        } else {
+          throw new Error(data.message || 'Login failed');
+        }
       },
     }),
     GoogleProvider({
@@ -43,58 +64,63 @@ export const authConfig: NextAuthOptions = {
       clientSecret: process.env.NEXT_PUBLIC_GOOGLE_SECRET_ID as string,
     }),
   ],
+  session: {
+    strategy: 'jwt',
+  },
+  jwt: {
+    maxAge: 60 * 60 * 24 * 30,
+  },
   secret: process.env.NEXTAUTH_SECRET ?? 'secret',
   callbacks: {
-    async signIn(params) {
-      if (!params.user.email) {
+    async signIn({ user }) {
+      if (!user.email) {
         return false;
       }
-      console.log('params', params);
-      // try {
-      //   const existingUser = await PrismaClient.user.findUnique({
-      //     where: {
-      //       email: params.user.email,
-      //     },
-      //   });
-      //   if (existingUser) {
-      //     return true;
-      //   }
-      //   await PrismaClient.user.create({
-      //     data: {
-      //       email: params.user.email,
-      //       hashedPassword: '',
-      //       uid: '',
-      //       status: 'Pending',
-      //       photoUrl: params.user.image,
-      //       name: params.user.name ?? '',
-      //       // provider: 'Google',
-      //     },
-      //   });
-      //   return true;
-      // } catch (e) {
-      //   console.log(e);
-      //   return false;
-      // }
-      return true;
+
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_SERVER_URL}/user/google-login`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: user.email,
+              name: user.name,
+            }),
+          }
+        );
+
+        const data = await res.json();
+
+        if (res.ok && data.data) {
+          user._id = data.data._id;
+
+          return true;
+        } else {
+          return false;
+        }
+      } catch (error) {
+        return false;
+      }
     },
-    async session({ session, token, user }) {
-      // const dbUser = await PrismaClient.user.findUnique({
-      //   where: {
-      //     email: session.user.email as string,
-      //   },
-      // });
-      // if (!dbUser) {
-      //   return session;
-      // }
-      return {
-        ...session,
-        // user: {
-        //   id: dbUser.id,
-        //   email: dbUser.email,
-        //   name: dbUser.name,
-        //   image: dbUser.photoUrl,
-        // },
-      };
+
+    async session({ session, token }) {
+      session.user._id = token._id as string;
+      session.user.role = token.role as string;
+
+      return session;
+    },
+
+    async jwt({ token, user }) {
+      if (user) {
+        token._id = user._id;
+        token.name = user.name;
+        token.email = user.email;
+        token.role = user.role;
+      }
+      return token;
     },
   },
 };

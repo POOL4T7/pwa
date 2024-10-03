@@ -24,7 +24,7 @@ export default async function Login() {
         <div className='flex flex-col items-center mt-10 p-10 shadow-md'>
           <div className='flex justify-center w-full'>
             <div className='flex w-full'>
-              <GoogleSignInButton />
+              <GoogleSignInButton />x
             </div>
           </div>
           <h1 className='mt-10 mb-4 text-4xl font-bold'>Sign In</h1>

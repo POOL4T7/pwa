@@ -25,11 +25,8 @@ const useFirebaseMessaging = () => {
     const registerServiceWorker = async () => {
       if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
         try {
-          const registration = await navigator?.serviceWorker.getRegistration(
-            '/firebase-messaging-sw.js'
-          );
-          console.log('registration', registration);
           const token = await requestFCMToken();
+          localStorage.setItem('fcmToken', token);
           setFcmToken(token);
         } catch (error) {
           console.error('Service Worker registration failed:', error);

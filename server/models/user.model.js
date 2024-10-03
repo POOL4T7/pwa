@@ -33,22 +33,27 @@ const UserSchema = new Schema({
     enum: ['admin', 'user', 'guest'],
     default: 'user',
   },
-  pushSubscription: {
-    endpoint: {
-      type: String,
-      required: true,
-    },
-    keys: {
-      p256dh: {
-        type: String,
-        required: true,
-      },
-      auth: {
-        type: String,
-        required: true,
-      },
-    },
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'deleted'],
+    default: 'active',
   },
+  // pushSubscription: {
+  //   endpoint: {
+  //     type: String,
+  //     required: true,
+  //   },
+  //   keys: {
+  //     p256dh: {
+  //       type: String,
+  //       required: true,
+  //     },
+  //     auth: {
+  //       type: String,
+  //       required: true,
+  //     },
+  //   },
+  // },
   fcmToken: { type: String, default: '' },
 });
 
